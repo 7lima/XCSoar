@@ -23,6 +23,8 @@ Copyright_License {
 
 */
 
+#include "Blackboard/DeviceBlackboard.hpp"
+#include "Components.hpp"
 #include "Device/Parser.hpp"
 #include "Util/CharUtil.hpp"
 #include "Geo/Geoid.hpp"
@@ -31,6 +33,7 @@ Copyright_License {
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
 #include "Driver/FLARM/StaticParser.hpp"
+#include "Thread/Mutex.hpp"
 
 NMEAParser::NMEAParser()
 {
@@ -111,6 +114,9 @@ NMEAParser::ParseLine(const char *string, NMEAInfo &info)
     // Garmin altitude sentence
     if (StringIsEqual(type + 1, "PGRMZ"))
       return RMZ(line, info);
+
+    if (StringIsEqual(type + 1, "PZENT"))
+      return PZENT(line, info);
 
     return false;
   }
@@ -788,4 +794,67 @@ NMEAParser::MWV(NMEAInputLine &line, NMEAInfo &info)
   info.ProvideExternalWind(wind);
 
   return true;
+}
+
+inline bool
+NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
+{
+  /*
+   * $PZENT,timestamp,bot_lat,bot_lon,bot_alt_m,top_lat,top_lon,top_alt_m,*hh
+   * Field number:
+   * 1) Unix timestamp last fix in thermal
+   * 2) Bottom latitude in decimal degrees
+   * 3) Bottom longitude in decimal degrees
+   * 4) Bottom altitude in decimal meters
+   * 5) Top latitude in decimal degrees
+   * 6) Top longitude in decimal degrees
+   * 7) Top altitude in decimal meters
+   * 8) Average thermal velocity in decimal m/s
+   */
+   double time = 0;
+   if(!line.ReadChecked(time))
+     return false;
+
+   double bot_lat = 0;
+   if(!line.ReadChecked(bot_lat))
+     return false;
+
+   double bot_lon = 0;
+   if(!line.ReadChecked(bot_lon))
+     return false;
+
+   double bot_alt = 0;
+   if(!line.ReadChecked(bot_alt))
+     return false;
+
+   double top_lat = 0;
+   if(!line.ReadChecked(top_lat))
+     return false;
+
+   double top_lon = 0;
+   if(!line.ReadChecked(top_lon))
+     return false;
+
+   double top_alt = 0;
+   if(!line.ReadChecked(top_alt))
+     return false;
+
+   double climb_ms = 0;
+   if(!line.ReadChecked(climb_ms))
+     return false;
+
+   {
+     ScopeLock protect(device_blackboard->mutex);
+     DerivedInfo di = device_blackboard->Calculated();
+     ThermalLocatorInfo & thermal_locator = di.thermal_locator;
+     ThermalSource & source = thermal_locator.AllocateSource();
+     
+     source.location = GeoPoint(Angle::Degrees(bot_lon), Angle::Degrees(bot_lat));
+     source.ground_height = bot_alt;
+     source.lift_rate = climb_ms;
+     source.time = time;
+
+     device_blackboard->ReadBlackboard(di);
+   }
+   return true;
 }
