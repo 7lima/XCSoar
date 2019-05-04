@@ -46,7 +46,7 @@ struct ThermalSource
 /** Structure for current thermal estimate from ThermalLocator */
 struct ThermalLocatorInfo
 {
-  static constexpr unsigned MAX_SOURCES = 20;
+  static constexpr unsigned MAX_SOURCES = 20000;
 
   /** Location of thermal at aircraft altitude */
   GeoPoint estimate_location;

@@ -35,7 +35,7 @@ Copyright_License {
  * FLARM.
  */
 struct TrafficList {
-  static constexpr size_t MAX_COUNT = 25;
+  static constexpr size_t MAX_COUNT = 25000;
 
   /**
    * Time stamp of the latest modification to this object.
