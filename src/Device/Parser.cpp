@@ -802,19 +802,14 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
   /*
    * $PZENT,timestamp,bot_lat,bot_lon,bot_alt_m,top_lat,top_lon,top_alt_m,*hh
    * Field number:
-   * 1) Unix timestamp last fix in thermal
-   * 2) Bottom latitude in decimal degrees
-   * 3) Bottom longitude in decimal degrees
-   * 4) Bottom altitude in decimal meters
-   * 5) Top latitude in decimal degrees
-   * 6) Top longitude in decimal degrees
-   * 7) Top altitude in decimal meters
-   * 8) Average thermal velocity in decimal m/s
+   * 1) Bottom latitude in decimal degrees
+   * 2) Bottom longitude in decimal degrees
+   * 3) Bottom altitude in decimal meters
+   * 4) Top latitude in decimal degrees
+   * 5) Top longitude in decimal degrees
+   * 6) Top altitude in decimal meters
+   * 7) Average thermal velocity in decimal m/s
    */
-   double time = 0;
-   if(!line.ReadChecked(time))
-     return false;
-
    double bot_lat = 0;
    if(!line.ReadChecked(bot_lat))
      return false;
@@ -852,7 +847,7 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
      source.location = GeoPoint(Angle::Degrees(bot_lon), Angle::Degrees(bot_lat));
      source.ground_height = bot_alt;
      source.lift_rate = climb_ms;
-     source.time = time;
+     source.time = info.time;
 
      device_blackboard->ReadBlackboard(di);
    }
