@@ -25,6 +25,8 @@ Copyright_License {
 #include "OS/Clock.hpp"
 #include "Atmosphere/AirDensity.hpp"
 
+#include <iostream>
+
 void
 GPSState::Reset()
 {
@@ -205,6 +207,8 @@ NMEAInfo::Reset()
   device.Clear();
   secondary_device.Clear();
   flarm.Clear();
+
+  thermals.Clear();
 }
 
 void
@@ -373,6 +377,7 @@ NMEAInfo::Complement(const NMEAInfo &add)
 
   flarm.Complement(add.flarm);
 
+  std::cout << "Going to add " << add.thermals.sources.size() << " to existing set of " << thermals.sources.size() << std::endl;
   for(auto & thermal : add.thermals.sources)
   {
     thermals.sources.checked_append(thermal);

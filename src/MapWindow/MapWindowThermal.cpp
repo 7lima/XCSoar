@@ -71,8 +71,7 @@ MapWindow::DrawThermalEstimate(Canvas &canvas) const
   //Draw PZENT thermals
   DrawThermalSources(canvas, look.thermal_source_icon, render_projection,
                      basic.thermals.sources, basic.nav_altitude,
-                     calculated.wind_available
-                     ? calculated.wind : SpeedVector::Zero());
+                     SpeedVector::Zero());
   
   DrawThermalSources(canvas, look.thermal_source_icon, render_projection,
                      thermal_locator.sources, basic.nav_altitude,

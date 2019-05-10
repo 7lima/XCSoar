@@ -345,9 +345,9 @@ GlueMapWindow::DrawThermalEstimate(Canvas &canvas) const
         look.thermal_source_icon.Draw(canvas, sc);
       }
     }
-  } else {
+  } //else {
     MapWindow::DrawThermalEstimate(canvas);
-  }
+  //}
 }
 
 void
