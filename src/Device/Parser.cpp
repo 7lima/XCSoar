@@ -23,8 +23,6 @@ Copyright_License {
 
 */
 
-#include "Blackboard/DeviceBlackboard.hpp"
-#include "Components.hpp"
 #include "Device/Parser.hpp"
 #include "Util/CharUtil.hpp"
 #include "Geo/Geoid.hpp"
@@ -34,6 +32,8 @@ Copyright_License {
 #include "Units/System.hpp"
 #include "Driver/FLARM/StaticParser.hpp"
 #include "Thread/Mutex.hpp"
+
+#include <iostream>
 
 NMEAParser::NMEAParser()
 {
@@ -799,6 +799,7 @@ NMEAParser::MWV(NMEAInputLine &line, NMEAInfo &info)
 inline bool
 NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
 {
+  std::cout << "Found $PZENT" << std::endl << std::flush;
   /*
    * $PZENT,timestamp,bot_lat,bot_lon,bot_alt_m,top_lat,top_lon,top_alt_m,*hh
    * Field number:
@@ -839,9 +840,9 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
      return false;
 
    {
-     ScopeLock protect(device_blackboard->mutex);
-     DerivedInfo di = device_blackboard->Calculated();
-     ThermalLocatorInfo & thermal_locator = di.thermal_locator;
+     std::cout << "Found thermal at " << bot_lat << "," << bot_lon << "," << bot_alt << std::endl << std::flush;
+   //  ScopeLock protect(device_blackboard->mutex);
+     ThermalLocatorInfo & thermal_locator = info.thermals;
      ThermalSource & source = thermal_locator.AllocateSource();
      
      source.location = GeoPoint(Angle::Degrees(bot_lon), Angle::Degrees(bot_lat));
@@ -849,7 +850,7 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
      source.lift_rate = climb_ms;
      source.time = info.time;
 
-     device_blackboard->ReadBlackboard(di);
+    std::cout << "After insertion there are " << thermal_locator.sources.size() << " thermals in the list" << std::endl;
    }
    return true;
 }

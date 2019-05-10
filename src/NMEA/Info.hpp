@@ -29,6 +29,7 @@ Copyright_License {
 #include "NMEA/ExternalSettings.hpp"
 #include "NMEA/Acceleration.hpp"
 #include "NMEA/Attitude.hpp"
+#include "NMEA/ThermalLocator.hpp"
 #include "SwitchState.hpp"
 #include "Time/BrokenDateTime.hpp"
 #include "Geo/GeoPoint.hpp"
@@ -325,6 +326,8 @@ struct NMEAInfo {
    * @see HumidityAvailable
    */
   double humidity;
+
+  ThermalLocatorInfo thermals;
 
   //###########
   //   Other

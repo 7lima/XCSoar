@@ -372,4 +372,9 @@ NMEAInfo::Complement(const NMEAInfo &add)
     stall_ratio = add.stall_ratio;
 
   flarm.Complement(add.flarm);
+
+  for(auto & thermal : add.thermals.sources)
+  {
+    thermals.sources.checked_append(thermal);
+  }
 }

@@ -26,6 +26,8 @@ Copyright_License {
 #include "Screen/Icon.hpp"
 #include "Tracking/SkyLines/Data.hpp"
 
+#include <iostream>
+
 template<typename T>
 static void
 DrawThermalSources(Canvas &canvas, const MaskedIcon &icon,
@@ -34,10 +36,12 @@ DrawThermalSources(Canvas &canvas, const MaskedIcon &icon,
                    const double aircraft_altitude,
                    const SpeedVector &wind)
 {
+  
   for (const auto &source : sources) {
+    std::cout << "Drawing thermal source lat=" << source.location.latitude.Degrees() << " lon=" << source.location.longitude.Degrees() << " alt=" << source.ground_height << " lift=" << source.lift_rate << std::endl;
     // find height difference
-    if (aircraft_altitude < source.ground_height)
-      continue;
+    //if (aircraft_altitude < source.ground_height)
+    //  continue;
 
     // draw thermal at location it would be at the glider's height
     GeoPoint location = wind.IsNonZero()
@@ -58,11 +62,18 @@ MapWindow::DrawThermalEstimate(Canvas &canvas) const
   const DerivedInfo &calculated = Calculated();
   const ThermalLocatorInfo &thermal_locator = calculated.thermal_locator;
 
-  if (render_projection.GetMapScale() > 4000)
-    return;
+  //if (render_projection.GetMapScale() > 4000)
+  //  return;
 
   // draw only at close map scales in non-circling mode
 
+  std::cout << "Going to draw " << basic.thermals.sources.size() << "  PZENT thermals" << std::endl;
+  //Draw PZENT thermals
+  DrawThermalSources(canvas, look.thermal_source_icon, render_projection,
+                     basic.thermals.sources, basic.nav_altitude,
+                     calculated.wind_available
+                     ? calculated.wind : SpeedVector::Zero());
+  
   DrawThermalSources(canvas, look.thermal_source_icon, render_projection,
                      thermal_locator.sources, basic.nav_altitude,
                      calculated.wind_available
