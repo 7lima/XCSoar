@@ -208,7 +208,7 @@ NMEAInfo::Reset()
   secondary_device.Clear();
   flarm.Clear();
 
-  thermals.Clear();
+  //thermals.Clear();
 }
 
 void

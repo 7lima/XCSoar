@@ -53,6 +53,8 @@ NMEAParser::ParseLine(const char *string, NMEAInfo &info)
 {
   assert(info.clock > 0);
 
+  info.thermals.Clear();
+
   if (string[0] != '$')
     return false;
 
