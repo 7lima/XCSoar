@@ -33,8 +33,6 @@ Copyright_License {
 #include "Driver/FLARM/StaticParser.hpp"
 #include "Thread/Mutex.hpp"
 
-#include <iostream>
-
 NMEAParser::NMEAParser()
 {
   Reset();
@@ -801,7 +799,6 @@ NMEAParser::MWV(NMEAInputLine &line, NMEAInfo &info)
 inline bool
 NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
 {
-  std::cout << "Found $PZENT" << std::endl << std::flush;
   /*
    * $PZENT,timestamp,bot_lat,bot_lon,bot_alt_m,top_lat,top_lon,top_alt_m,*hh
    * Field number:
@@ -841,8 +838,10 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
    if(!line.ReadChecked(climb_ms))
      return false;
 
+   if(climb_ms < 0.0)
+     return true;
+
    {
-     std::cout << "Found thermal at " << bot_lat << "," << bot_lon << "," << bot_alt << std::endl << std::flush;
    //  ScopeLock protect(device_blackboard->mutex);
      ThermalLocatorInfo & thermal_locator = info.thermals;
      ThermalSource & source = thermal_locator.AllocateSource();
@@ -852,7 +851,6 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
      source.lift_rate = climb_ms;
      source.time = info.time;
 
-    std::cout << "After insertion there are " << thermal_locator.sources.size() << " thermals in the list" << std::endl;
    }
    return true;
 }

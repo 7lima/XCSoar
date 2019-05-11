@@ -26,8 +26,6 @@ Copyright_License {
 #include "Screen/Icon.hpp"
 #include "Tracking/SkyLines/Data.hpp"
 
-#include <iostream>
-
 template<typename T>
 static void
 DrawThermalSources(Canvas &canvas, const MaskedIcon &icon,
@@ -38,7 +36,6 @@ DrawThermalSources(Canvas &canvas, const MaskedIcon &icon,
 {
   
   for (const auto &source : sources) {
-    std::cout << "Drawing thermal source lat=" << source.location.latitude.Degrees() << " lon=" << source.location.longitude.Degrees() << " alt=" << source.ground_height << " lift=" << source.lift_rate << std::endl;
     // find height difference
     //if (aircraft_altitude < source.ground_height)
     //  continue;
@@ -67,7 +64,6 @@ MapWindow::DrawThermalEstimate(Canvas &canvas) const
 
   // draw only at close map scales in non-circling mode
 
-  std::cout << "Going to draw " << basic.thermals.sources.size() << "  PZENT thermals" << std::endl;
   //Draw PZENT thermals
   DrawThermalSources(canvas, look.thermal_source_icon, render_projection,
                      basic.thermals.sources, basic.nav_altitude,
