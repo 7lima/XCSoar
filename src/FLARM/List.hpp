@@ -65,15 +65,10 @@ struct TrafficList {
    * this one.
    */
   void Complement(const TrafficList &add) {
-    if (IsEmpty() && !add.IsEmpty()) {
-      for(auto &traffic : add.list) {
-        if(!FindTraffic(traffic.id)) {
-          FlarmTraffic *flarm_slot = AllocateTraffic();
-          if(flarm_slot == nullptr)
-            return;
-          flarm_slot->Clear();
-          flarm_slot->Update(traffic);
-        }
+    //Add unique traffic from 'add' list
+    for (auto &traffic : add.list) {
+      if (FindTraffic(traffic.id) == NULL) {
+        list.append(traffic);
       }
     }
   }
