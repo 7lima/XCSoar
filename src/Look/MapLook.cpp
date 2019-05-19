@@ -79,6 +79,7 @@ MapLook::Initialise(const MapSettings &settings,
   contest_pens[2].Create(Layout::ScalePenWidth(1), COLOR_BLUE);
 
   thermal_source_icon.LoadResource(IDB_THERMALSOURCE, IDB_THERMALSOURCE_HD);
+  net_thermal_source_icon.LoadResource(IDB_NET_THERMALSOURCE, IDB_NET_THERMALSOURCE_HD);
 
   traffic_safe_icon.LoadResource(IDB_TRAFFIC_SAFE, IDB_TRAFFIC_SAFE_HD, false);
   traffic_warning_icon.LoadResource(IDB_TRAFFIC_WARNING, IDB_TRAFFIC_WARNING_HD, false);
