@@ -70,8 +70,7 @@ struct TrafficList {
           FlarmTraffic *flarm_slot = AllocateTraffic();
           if(flarm_slot == nullptr)
             return;
-          flarm_slot->Clear();
-          flarm_slot->Update(traffic);
+          *flarm_slot = traffic;
         }
       }
   }
