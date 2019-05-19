@@ -65,7 +65,7 @@ MapWindow::DrawThermalEstimate(Canvas &canvas) const
   // draw only at close map scales in non-circling mode
 
   //Draw PZENT thermals
-  DrawThermalSources(canvas, look.thermal_source_icon, render_projection,
+  DrawThermalSources(canvas, look.net_thermal_source_icon, render_projection,
                      basic.thermals.sources, basic.nav_altitude,
                      SpeedVector::Zero());
   
