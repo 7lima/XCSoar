@@ -1062,15 +1062,15 @@ static constexpr MetaData meta_data[] = {
 
   //Radio
   {
-    N_("Active Radio Frequency");
-    N_("Act Freq");
-    N_("The currently active Radio Frequency");
+    N_("Active Radio Frequency"),
+    N_("Act Freq"),
+    N_("The currently active Radio Frequency"),
     UpdateInfoBoxActiveFrequency,
   },
   {
-    N_("Standby Radio Frequency");
-    N_("Act Freq");
-    N_("The currently active Radio Frequency");
+    N_("Standby Radio Frequency"),
+    N_("Act Freq"),
+    N_("The currently active Radio Frequency"),
     UpdateInfoBoxStandbyFrequency,
   },
 
