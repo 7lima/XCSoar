@@ -1069,7 +1069,7 @@ static constexpr MetaData meta_data[] = {
   },
   {
     N_("Standby Radio Frequency"),
-    N_("Act Freq"),
+    N_("Stby Freq"),
     N_("The currently active Radio Frequency"),
     UpdateInfoBoxStandbyFrequency,
   },
