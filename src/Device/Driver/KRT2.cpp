@@ -253,9 +253,10 @@ KRT2Device::DataReceived(const void *_data, size_t length,
           case STX:
             // Received a command from the radio (STX). Handle what we know.
             {
-              const std::lock_guard<Mutex> lock(response_mutex);
+              response_mutex.Lock();
               const struct stx_msg * msg = (const struct stx_msg *) range.data;
               HandleSTXCommand(msg, info);
+              response_mutex.Unlock();
             }
           default:
             break;
