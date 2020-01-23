@@ -71,7 +71,7 @@ public:
   }
 
   constexpr bool IsDefined() const {
-    return value != 0;
+    return value != 0 && value >= 18000 && value < 37000;
   }
 
   /**
