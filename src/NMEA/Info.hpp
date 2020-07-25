@@ -38,6 +38,7 @@ Copyright_License {
 #include "DeviceInfo.hpp"
 #include "FLARM/Data.hpp"
 #include "Geo/SpeedVector.hpp"
+#include "Engine/Route/Route.hpp"
 
 #include <type_traits>
 
@@ -328,6 +329,7 @@ struct NMEAInfo {
   double humidity;
 
   ThermalLocatorInfo thermals;
+  StaticRoute route;
 
   //###########
   //   Other

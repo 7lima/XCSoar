@@ -207,6 +207,7 @@ NMEAInfo::Reset()
   flarm.Clear();
 
   //thermals.Clear();
+  //route.clear();
 }
 
 void
@@ -378,5 +379,10 @@ NMEAInfo::Complement(const NMEAInfo &add)
   for(auto & thermal : add.thermals.sources)
   {
     thermals.sources.checked_append(thermal);
+  }
+
+  if(!add.route.empty())
+  {
+	  route = add.route; //no way to append, so overwrite
   }
 }

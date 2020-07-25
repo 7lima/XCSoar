@@ -169,6 +169,7 @@ private:
   static bool MWV(NMEAInputLine &line, NMEAInfo &info);
 
   static bool PZENT(NMEAInputLine &line, NMEAInfo &info);
+  static bool PZENR(NMEAInputLine &line, NMEAInfo &info);
 };
 
 #endif

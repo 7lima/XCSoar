@@ -36,7 +36,7 @@ typedef std::vector<AGeoPoint> Route;
 /**
  * A variant of Route based on StaticArray.
  */
-struct StaticRoute : public TrivialArray<Route::value_type, 64u> {
+struct StaticRoute : public TrivialArray<Route::value_type, 1024u> {
   /**
    * Copy a Route to a StaticRoute, clipping items that don't fit.
    */
