@@ -26,6 +26,7 @@ Copyright_License {
 #include "Device/Util/NMEAWriter.hpp"
 #include "NMEA/Checksum.hpp"
 #include "NMEA/Info.hpp"
+#include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
@@ -35,9 +36,6 @@ Copyright_License {
 class ZenDevice : public AbstractDevice {
 	Port &port;
 
-private:
-  PolarCoefficients polar;
-
 public:
 
   ZenDevice(Port &_port):port(_port) {}
@@ -45,7 +43,6 @@ public:
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
 
-  void OnSysTicker() override;
   void OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated) override;
 };
 
@@ -58,25 +55,20 @@ ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
 void
 ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated)
 {
-  polar = calculated.glide_polar_safety.GetCoefficients();
-}
+  if(!basic.location_available || !basic.gps_altitude_available)
+	  return;
 
-void
-ZenDevice::OnSysTicker()
-{
-  const auto polar_a = polar.a;
-  const auto polar_b = polar.b;
-  const auto polar_c = polar.c;
+  const auto polar = calculated.glide_polar_safety.GetCoefficients();
 
   NullOperationEnvironment env;
-  double lat = 0;
-  double lon = 0;
-  double alt = 0;
+  const auto lat = basic.location.latitude.Degrees();
+  const auto lon = basic.location.longitude.Degrees();
+  double alt = basic.gps_altitude;
   double nxt_lat = 0;
   double nxt_lon = 0;
 
   char buffer[100];
-  sprintf(buffer, "$PZENF,%f,%f,%f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar_a, polar_b, polar_c, nxt_lat, nxt_lon);
+  sprintf(buffer, "$PZENF,%f,%f,%f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon);
   PortWriteNMEA(port, buffer, env);
 // Get Polar
 // Get current lat/lon/alt
