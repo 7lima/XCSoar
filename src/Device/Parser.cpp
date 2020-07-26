@@ -876,7 +876,7 @@ NMEAParser::PZENR(NMEAInputLine & line, NMEAInfo & info)
    if(!line.ReadChecked(route_index))
      return false;
    
-   unsigned int cost = 0;
+   double cost = 0;
    if(!line.ReadChecked(cost))
      return false;
 
@@ -904,7 +904,7 @@ NMEAParser::PZENR(NMEAInputLine & line, NMEAInfo & info)
      return false;
 
    {
-     info.route.resize(route_index);
+     info.route.resize(route_index+1);
      const GeoPoint gps(Angle::Degrees(lon), Angle::Degrees(lat));
      info.route[route_index] = AGeoPoint(gps, alt);
    }

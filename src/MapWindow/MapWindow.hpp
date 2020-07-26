@@ -299,6 +299,7 @@ protected:
   void DrawContest(Canvas &canvas);
   void DrawTask(Canvas &canvas);
   void DrawRoute(Canvas &canvas);
+  void DrawExternalRoute(Canvas &canvas);
   void DrawTaskOffTrackIndicator(Canvas &canvas);
   void DrawWaves(Canvas &canvas);
   virtual void DrawThermalEstimate(Canvas &canvas) const;

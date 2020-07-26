@@ -36,6 +36,9 @@ Copyright_License {
 void
 MapWindow::DrawTask(Canvas &canvas)
 {
+  if (Basic().route.size()>2)
+    DrawExternalRoute(canvas);
+  
   if (task == nullptr)
     return;
 
@@ -81,6 +84,22 @@ void
 MapWindow::DrawRoute(Canvas &canvas)
 {
   const auto &route = Calculated().planned_route;
+
+  const auto r_size = route.size();
+  BulkPixelPoint p[r_size], *pp = &p[0];
+  for (auto i = route.begin(), end = route.end(); i != end; ++i, ++pp)
+    *pp = render_projection.GeoToScreen(*i);
+
+  p[r_size - 1] = ScreenClosestPoint(p[r_size-1], p[r_size-2], p[r_size-1], Layout::Scale(20));
+
+  canvas.Select(look.task.bearing_pen);
+  canvas.DrawPolyline(p, r_size);
+}
+
+void
+MapWindow::DrawExternalRoute(Canvas &canvas)
+{
+  const auto &route = Basic().route;
 
   const auto r_size = route.size();
   BulkPixelPoint p[r_size], *pp = &p[0];
