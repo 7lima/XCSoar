@@ -26,11 +26,17 @@ Copyright_License {
 #include "Device/Util/NMEAWriter.hpp"
 #include "NMEA/Checksum.hpp"
 #include "NMEA/Info.hpp"
+#include "NMEA/Derived.hpp"
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
+#include "Engine/GlideSolvers/PolarCoefficients.hpp"
+#include "Operation/Operation.hpp"
 
 class ZenDevice : public AbstractDevice {
 	Port &port;
+
+private:
+  PolarCoefficients polar;
 
 public:
 
@@ -39,139 +45,44 @@ public:
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
 
-  bool PutMacCready(double mc, OperationEnvironment &env) override;
-  bool PutBallast(double fraction, double overload,
-                  OperationEnvironment &env) override;
-  bool PutBugs(double bugs, OperationEnvironment &env) override;
-				  
-  static bool POV(NMEAInputLine &line, NMEAInfo &info);
+  void OnSysTicker() override;
+  void OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated) override;
 };
-
-bool
-ZenDevice::PutMacCready(double mc, OperationEnvironment &env)
-{
-  if (!EnableNMEA(env))
-    return false;
-  
-  char buffer[30];
-  sprintf(buffer,"POV,C,MC,%0.2f", (double)mc);
-  return PortWriteNMEA(port, buffer, env);
-}
-
-bool
-ZenDevice::PutBallast(double fraction, double overload, OperationEnvironment &env)
-{
-   
-  if (!EnableNMEA(env))
-    return false;
-  
-  char buffer[30];
-  sprintf(buffer,"POV,C,WL,%3f", overload);
-  return PortWriteNMEA(port, buffer, env);
-}
-
-bool
-ZenDevice::PutBugs(double bugs, OperationEnvironment &env)
-{
-  //unsigned _bugs = uround(bugs);
-  double _bugs = (double)(bugs);
-
-  char buffer[32];
-  sprintf(buffer, "$POV,C,BU,%0.2f\r", _bugs);
-  return PortWriteNMEA(port, buffer, env);
-}
 
 bool
 ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
 {
-  if (!VerifyNMEAChecksum(_line))
-    return false;
-
-  NMEAInputLine line(_line);
-  if (line.ReadCompare("$POV"))
-    return POV(line, info);
-
   return false;
 }
 
-bool
-ZenDevice::POV(NMEAInputLine &line, NMEAInfo &info)
+void
+ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated)
 {
-  /*
-   * Type definitions:
-   *
-   * E: TE vario in m/s
-   * P: static pressure in hPa
-   * Q: dynamic pressure in Pa
-   * R: total pressure in hPa
-   * S: true airspeed in km/h
-   * T: temperature in deg C
-   */
+  polar = calculated.glide_polar_safety.GetCoefficients();
+}
 
-  while (!line.IsEmpty()) {
-    char type = line.ReadOneChar();
-    if (type == '\0')
-      break;
+void
+ZenDevice::OnSysTicker()
+{
+  const auto polar_a = polar.a;
+  const auto polar_b = polar.b;
+  const auto polar_c = polar.c;
 
-    double value;
-    if (!line.ReadChecked(value))
-      break;
+  NullOperationEnvironment env;
+  double lat = 0;
+  double lon = 0;
+  double alt = 0;
+  double nxt_lat = 0;
+  double nxt_lon = 0;
 
-    switch (type) {
-      case 'E': {
-        info.ProvideTotalEnergyVario(value);
-        break;
-      }
-      case 'P': {
-	AtmosphericPressure pressure;
-	if (value > double(9998.0))
-	{
-		info.static_pressure_available.Clear();
-	}
-	else
-	{
-		pressure = AtmosphericPressure::HectoPascal(value);
-		info.ProvideStaticPressure(pressure);
-	}
-        break;
-      }
-      case 'Q': {
-	AtmosphericPressure pressure;
-	if (value > double(9998.0))
-	{
-		info.dyn_pressure_available.Clear();
-	}
-	else
-	{
-		pressure = AtmosphericPressure::Pascal(value);
-		info.ProvideDynamicPressure(pressure);
-	}
-        break;
-      }
-      case 'R': {
-        AtmosphericPressure pressure = AtmosphericPressure::HectoPascal(value);
-        info.ProvidePitotPressure(pressure);
-        break;
-      }
-      case 'S': {
-        value = Units::ToSysUnit(value, Unit::KILOMETER_PER_HOUR);
-        info.ProvideTrueAirspeed(value);
-        break;
-      }
-      case 'T': {
-        info.temperature = Temperature::FromCelsius(value);
-        info.temperature_available = true;
-        break;
-      }	  
-      case 'V': {
-        info.voltage = value;
-	info.voltage_available.Update(info.clock);
-        break;
-      }
-    }
-  }
-
-  return true;
+  char buffer[100];
+  sprintf(buffer, "$PZENF,%f,%f,%f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar_a, polar_b, polar_c, nxt_lat, nxt_lon);
+  PortWriteNMEA(port, buffer, env);
+// Get Polar
+// Get current lat/lon/alt
+// Get next waypoint lat/lon
+// Get current airspeed, vario, netto vario
+// Write out $PZENF
 }
 
 static Device *
@@ -183,6 +94,6 @@ ZenCreateOnPort(const DeviceConfig &config, Port &com_port)
 const struct DeviceRegister zen_driver = {
   _T("Zen Soaring"),
   _T("Zen Soaring"),
-  0,
+  DeviceRegister::SEND_SETTINGS,
   ZenCreateOnPort,
 };
