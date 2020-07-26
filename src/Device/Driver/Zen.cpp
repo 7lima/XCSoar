@@ -32,6 +32,9 @@ Copyright_License {
 #include "Units/System.hpp"
 #include "Engine/GlideSolvers/PolarCoefficients.hpp"
 #include "Operation/Operation.hpp"
+#include "Task/ProtectedTaskManager.hpp"
+#include "Components.hpp"
+#include "Engine/Waypoint/Waypoint.hpp"
 
 class ZenDevice : public AbstractDevice {
 	Port &port;
@@ -59,16 +62,17 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 	  return;
 
   const auto polar = calculated.glide_polar_safety.GetCoefficients();
+  const auto wp = protected_task_manager->GetActiveWaypoint();
 
   NullOperationEnvironment env;
   const auto lat = basic.location.latitude.Degrees();
   const auto lon = basic.location.longitude.Degrees();
   double alt = basic.gps_altitude;
-  double nxt_lat = 0;
-  double nxt_lon = 0;
+  double nxt_lat = wp->location.latitude.Degrees();
+  double nxt_lon = wp->location.longitude.Degrees();
 
   char buffer[100];
-  sprintf(buffer, "$PZENF,%f,%f,%f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon);
+  sprintf(buffer, "PZENF,%f,%f,%f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon);
   PortWriteNMEA(port, buffer, env);
 // Get Polar
 // Get current lat/lon/alt
