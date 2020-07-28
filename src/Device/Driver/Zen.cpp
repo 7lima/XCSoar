@@ -72,7 +72,7 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   double nxt_lon = wp->location.longitude.Degrees();
 
   char buffer[100];
-  sprintf(buffer, "PZENF,%f,%f,%f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon);
+  sprintf(buffer, "PZENF,%f,%f,%.2f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon);
   PortWriteNMEA(port, buffer, env);
 // Get Polar
 // Get current lat/lon/alt
