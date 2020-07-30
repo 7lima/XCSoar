@@ -71,8 +71,12 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   double nxt_lat = wp->location.latitude.Degrees();
   double nxt_lon = wp->location.longitude.Degrees();
 
+  const auto wind_vector = calculated.GetWindOrZero();
+  const auto wind_speed = wind_vector.bearing.Degrees();
+  const auto wind_dir = wind_vector.norm; 
+
   char buffer[100];
-  sprintf(buffer, "PZENF,%f,%f,%.2f,%f,%f,%f,%f,%f,,,",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon);
+  sprintf(buffer, "PZENF,%f,%f,%.2f,%f,%f,%f,%f,%f,%.1f,%.1f",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon, wind_speed, wind_dir);
   PortWriteNMEA(port, buffer, env);
 // Get Polar
 // Get current lat/lon/alt
