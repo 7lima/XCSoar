@@ -22,6 +22,9 @@ Copyright_License {
 */
 
 #include "Device/Driver/Zen.hpp"
+
+#include <algorithm> // std::min and std::max
+
 #include "Device/Driver.hpp"
 #include "Device/Util/NMEAWriter.hpp"
 #include "NMEA/Checksum.hpp"
@@ -75,8 +78,19 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   const auto wind_speed = wind_vector.bearing.Degrees();
   const auto wind_dir = wind_vector.norm; 
 
+  const auto prev_thermals_active = calculated.thermal_encounter_collection.Valid();
+  const auto prev_thermals_floor = prev_thermals_active ? calculated.thermal_encounter_collection.GetFloor() : 10000.0;
+  const auto prev_thermals_ceiling = prev_thermals_active ? calculated.thermal_encounter_collection.GetCeiling() : 0.0;
+  
+  const auto cur_thermal_active = calculated.thermal_encounter_band.Valid();
+  const auto cur_thermal_floor = cur_thermal_active ? calculated.thermal_encounter_band.GetFloor() : 10000.0;;
+  const auto cur_thermal_ceiling = cur_thermal_active ? calculated.thermal_encounter_band.GetCeiling() : 0.0;
+
+  const auto thermal_floor = std::min(cur_thermal_floor, prev_thermals_floor);
+  const auto thermal_ceiling = std::max(cur_thermal_ceiling, prev_thermals_ceiling);
+
   char buffer[100];
-  sprintf(buffer, "PZENF,%f,%f,%.2f,%f,%f,%f,%f,%f,%.1f,%.1f",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon, wind_speed, wind_dir);
+  sprintf(buffer, "PZENF,%f,%f,%.2f,%f,%f,%f,%f,%f,%.1f,%.1f,%.0f,%.0f",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon, wind_speed, wind_dir, thermal_floor, thermal_ceiling);
   PortWriteNMEA(port, buffer, env);
 // Get Polar
 // Get current lat/lon/alt
@@ -92,8 +106,8 @@ ZenCreateOnPort(const DeviceConfig &config, Port &com_port)
 }
 
 const struct DeviceRegister zen_driver = {
-  _T("Zen Soaring"),
-  _T("Zen Soaring"),
+  _T("Zen Pathfinder"),
+  _T("Zen Pathfinder"),
   DeviceRegister::SEND_SETTINGS,
   ZenCreateOnPort,
 };
