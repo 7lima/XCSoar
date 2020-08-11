@@ -44,9 +44,6 @@ Copyright_License {
 #include "Plane/Plane.hpp"
 #include "Interface.hpp"
 
-template <class... Args>
-bool PortPrintNMEA(Port & p, const char * format, Args&&... args);
-
 class ZenDevice : public AbstractDevice {
 private:
 	Port &port;
@@ -75,58 +72,68 @@ ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
   return false;
 }
 
-template <class... Args>
-bool
-PortPrintNMEA(Port & p, const char * format, Args&&... args)
-{
-	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, format, std::forward<Args>(args)...);
-	return PortWriteNMEA(p, buffer, env);
-}
-
 inline bool
 WritePXCSG(Port & p, const AGeoPoint & geo)
 {
-	return PortPrintNMEA(p, "PXCSG,%f,%f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude);
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "PXCSG,%f,%f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude);
+	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
 WriteGPMWV(Port & p, const SpeedVector & wind)
 {
-	return PortPrintNMEA(p, "GPMWV,%.1f,T,%.1f,A", wind.bearing.Degrees(), wind.norm);
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "GPMWV,%.1f,T,%.1f,A", wind.bearing.Degrees(), wind.norm);
+	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
 WritePXCSP(Port & p, const PolarCoefficients & polar)
 {
-	return PortPrintNMEA(p, "PXCSP,%f,%f,%f", polar.a, polar.b, polar.c);
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "PXCSP,%f,%f,%f", polar.a, polar.b, polar.c);
+	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
 WritePXCSR(Port & p, const Plane & plane)
 {
-	return PortPrintNMEA(p, "PXCSR,%s", plane.registration.c_str());
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "PXCSR,%s", plane.registration.c_str());
+	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
 WritePXCSW(Port & p, const GeoPoint & wp)
 {
-	return PortPrintNMEA(p, "PXCSW,%f,%f", wp.latitude.Degrees(), wp.longitude.Degrees());
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "PXCSW,%f,%f", wp.latitude.Degrees(), wp.longitude.Degrees());
+	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
 WritePXCST(Port & p, double floor, double ceiling)
 {
-	return PortPrintNMEA(p, "PXCST,%.0f,%.0f", floor, ceiling);
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "PXCST,%.0f,%.0f", floor, ceiling);
+	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
 WritePOGNB(Port & p, const FlarmTraffic & plane)
 {
+	NullOperationEnvironment env;
+	char buffer[74];
 	char flarm_id[8];
 	plane.id.Format(flarm_id);
-	return PortPrintNMEA(p, "POGNB,%u,%u,%s,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f",
+	sprintf(buffer, "POGNB,%u,%u,%s,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f",
 			(unsigned)plane.type,
 			(unsigned)plane.id_type,
 			flarm_id,
@@ -137,6 +144,7 @@ WritePOGNB(Port & p, const FlarmTraffic & plane)
 			((Angle)plane.track).Degrees(),
 			(double)plane.turn_rate,
 			(double)plane.climb_rate);
+	return PortWriteNMEA(p, buffer, env);
 }
 
 void
