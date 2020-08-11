@@ -38,13 +38,25 @@ Copyright_License {
 #include "Task/ProtectedTaskManager.hpp"
 #include "Components.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
+#include "Geo/SpeedVector.hpp"
+#include "Geo/GeoPoint.hpp"
+
+template <class... Args>
+bool PortPrintNMEA(Port & p, const char * format, Args&&... args);
 
 class ZenDevice : public AbstractDevice {
+private:
 	Port &port;
+	PolarCoefficients m_polar;
+	GeoPoint m_next_waypoint;
+	SpeedVector m_wind_vector;
+	AGeoPoint m_last_position;
+	double m_thermal_ceiling;
+	double m_thermal_floor;	
 
 public:
 
-  ZenDevice(Port &_port):port(_port) {}
+  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor() {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
@@ -58,45 +70,89 @@ ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
   return false;
 }
 
+template <class... Args>
+bool
+PortPrintNMEA(Port & p, const char * format, Args&&... args)
+{
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, format, std::forward<Args>(args)...);
+	return PortWriteNMEA(p, buffer, env);
+}
+
+inline bool
+WritePXCSG(Port & p, const AGeoPoint & geo)
+{
+	return PortPrintNMEA(p, "PXCSG,%f,%f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude);
+}
+
+inline bool
+WriteGPMWV(Port & p, const SpeedVector & wind)
+{
+	return PortPrintNMEA(p, "GPMWV,%.1f,T,%.1f,A", wind.bearing.Degrees(), wind.norm);
+}
+
+inline bool
+WritePXCSP(Port & p, const PolarCoefficients & polar)
+{
+	return PortPrintNMEA(p, "PXCSP,%f,%f,%f", polar.a, polar.b, polar.c);
+}
+
+inline bool
+WritePXCSW(Port & p, const GeoPoint & wp)
+{
+	return PortPrintNMEA(p, "PXCSW,%f,%f", wp.latitude.Degrees(), wp.longitude.Degrees());
+}
+
+inline bool
+WritePXCST(Port & p, double floor, double ceiling)
+{
+	return PortPrintNMEA(p, "PXCST,%.0f,%.0f", floor, ceiling);
+}
+
 void
 ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated)
 {
   if(!basic.location_available || !basic.gps_altitude_available)
 	  return;
 
+  /* Update Polar */
   const auto polar = calculated.glide_polar_safety.GetCoefficients();
+  if(polar.a != m_polar.a || polar.b != m_polar.b || polar.c != m_polar.c) {
+	  m_polar = polar;
+	  WritePXCSP(port, m_polar);
+  }
+
+  /* Update Next Waypoint */
   const auto wp = protected_task_manager->GetActiveWaypoint();
+  if(wp != nullptr && m_next_waypoint != wp->location) {
+	  m_next_waypoint = wp->location;
+	  WritePXCSW(port, m_next_waypoint);
+  }
 
-  NullOperationEnvironment env;
-  const auto lat = basic.location.latitude.Degrees();
-  const auto lon = basic.location.longitude.Degrees();
-  double alt = basic.gps_altitude;
-  double nxt_lat = wp->location.latitude.Degrees();
-  double nxt_lon = wp->location.longitude.Degrees();
-
+  /* Update Wind Vector */
   const auto wind_vector = calculated.GetWindOrZero();
-  const auto wind_speed = wind_vector.bearing.Degrees();
-  const auto wind_dir = wind_vector.norm; 
+  if(wind_vector.bearing != m_wind_vector.bearing || wind_vector.norm != m_wind_vector.norm) {
+	  m_wind_vector = wind_vector;
+	  WriteGPMWV(port, m_wind_vector);
+  }
 
-  const auto prev_thermals_active = calculated.thermal_encounter_collection.Valid();
-  const auto prev_thermals_floor = prev_thermals_active ? calculated.thermal_encounter_collection.GetFloor() : 10000.0;
-  const auto prev_thermals_ceiling = prev_thermals_active ? calculated.thermal_encounter_collection.GetCeiling() : 0.0;
-  
-  const auto cur_thermal_active = calculated.thermal_encounter_band.Valid();
-  const auto cur_thermal_floor = cur_thermal_active ? calculated.thermal_encounter_band.GetFloor() : 10000.0;;
-  const auto cur_thermal_ceiling = cur_thermal_active ? calculated.thermal_encounter_band.GetCeiling() : 0.0;
+  /* Update our own position */
+  const AGeoPoint pos(basic.location, basic.gps_altitude );
+  if(pos.latitude != m_last_position.latitude || pos.longitude != m_last_position.longitude || pos.altitude != m_last_position.altitude) {
+	m_last_position = pos;
+	WritePXCSG(port, pos);
+  }
 
-  const auto thermal_floor = std::min(cur_thermal_floor, prev_thermals_floor);
-  const auto thermal_ceiling = std::max(cur_thermal_ceiling, prev_thermals_ceiling);
-
-  char buffer[100];
-  sprintf(buffer, "PZENF,%f,%f,%.2f,%f,%f,%f,%f,%f,%.1f,%.1f,%.0f,%.0f",lat, lon, alt, polar.a, polar.b, polar.c, nxt_lat, nxt_lon, wind_speed, wind_dir, thermal_floor, thermal_ceiling);
-  PortWriteNMEA(port, buffer, env);
-// Get Polar
-// Get current lat/lon/alt
-// Get next waypoint lat/lon
-// Get current airspeed, vario, netto vario
-// Write out $PZENF
+  const auto prev_thermals = calculated.thermal_encounter_collection;
+  const auto cur_thermal = calculated.thermal_encounter_band;
+  ThermalEncounterCollection all_thermals = prev_thermals;
+  all_thermals.Merge(cur_thermal);
+  if (all_thermals.Valid() && (m_thermal_ceiling != all_thermals.GetCeiling() || m_thermal_floor != all_thermals.GetFloor())) {
+	  m_thermal_floor = all_thermals.GetFloor();
+	  m_thermal_ceiling = all_thermals.GetCeiling();
+	  WritePXCST(port, m_thermal_floor, m_thermal_ceiling);
+  }
 }
 
 static Device *
