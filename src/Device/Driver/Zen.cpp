@@ -127,16 +127,16 @@ WritePOGNB(Port & p, const FlarmTraffic & plane)
 	char flarm_id[8];
 	plane.id.Format(flarm_id);
 	return PortPrintNMEA(p, "POGNB,%u,%u,%s,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f",
-			plane.type,
-			plane.id_type,
+			(unsigned)plane.type,
+			(unsigned)plane.id_type,
 			flarm_id,
 			plane.location.latitude.Degrees(),
 			plane.location.longitude.Degrees(),
-			plane.altitude,
-			plane.speed,
-			plane.track,
-			plane.turn_rate,
-			plane.climb_rate);
+			(double)plane.altitude,
+			(double)plane.speed,
+			((Angle)plane.track).Degrees(),
+			(double)plane.turn_rate,
+			(double)plane.climb_rate);
 }
 
 void
