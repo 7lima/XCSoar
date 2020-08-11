@@ -131,7 +131,14 @@ ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, double clock)
     return;
   traffic.relative_altitude = value;
 
-  line.Skip(); /* id type */
+  unsigned id_type;
+  if (!line.ReadChecked(id_type))
+    return;
+  
+  if (id_type > 2)
+    traffic.id_type = FlarmTraffic::FlarmIdType::RANDOM;
+  else
+    traffic.id_type = (FlarmTraffic::FlarmIdType)id_type;
 
   // 5 id, 6 digit hex
   char id_string[16];

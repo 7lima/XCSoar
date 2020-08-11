@@ -56,4 +56,5 @@ FlarmTraffic::Update(const FlarmTraffic &other)
   climb_rate_received = other.climb_rate_received;
   stealth = other.stealth;
   type = other.type;
+  id_type = other.id_type;
 }

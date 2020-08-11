@@ -40,6 +40,7 @@ Copyright_License {
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "Geo/SpeedVector.hpp"
 #include "Geo/GeoPoint.hpp"
+#include "FLARM/List.hpp"
 
 template <class... Args>
 bool PortPrintNMEA(Port & p, const char * format, Args&&... args);
@@ -53,10 +54,11 @@ private:
 	AGeoPoint m_last_position;
 	double m_thermal_ceiling;
 	double m_thermal_floor;	
+	TrafficList m_traffic;
 
 public:
 
-  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor() {}
+  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_traffic() {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
@@ -110,6 +112,24 @@ WritePXCST(Port & p, double floor, double ceiling)
 	return PortPrintNMEA(p, "PXCST,%.0f,%.0f", floor, ceiling);
 }
 
+inline bool
+WritePOGNB(Port & p, const FlarmTraffic & plane)
+{
+	char flarm_id[8];
+	plane.id.Format(flarm_id);
+	return PortPrintNMEA(p, "POGNB,%u,%u,%s,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f",
+			plane.type,
+			plane.id_type,
+			flarm_id,
+			plane.location.latitude.Degrees(),
+			plane.location.longitude.Degrees(),
+			plane.altitude,
+			plane.speed,
+			plane.track,
+			plane.turn_rate,
+			plane.climb_rate);
+}
+
 void
 ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated)
 {
@@ -144,6 +164,7 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 	WritePXCSG(port, pos);
   }
 
+  /* Update thermal band, also during thermalling */
   const auto prev_thermals = calculated.thermal_encounter_collection;
   const auto cur_thermal = calculated.thermal_encounter_band;
   ThermalEncounterCollection all_thermals = prev_thermals;
@@ -153,6 +174,13 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 	  m_thermal_ceiling = all_thermals.GetCeiling();
 	  WritePXCST(port, m_thermal_floor, m_thermal_ceiling);
   }
+
+  /* Update FLARM traffic, if it was updated less than a second ago */
+  for(const auto & plane : basic.flarm.traffic.list) {
+	  if(!plane.stealth) {
+		  WritePOGNB(port, plane);
+	  }
+  } 
 }
 
 static Device *
