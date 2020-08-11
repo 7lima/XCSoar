@@ -41,6 +41,8 @@ Copyright_License {
 #include "Geo/SpeedVector.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "FLARM/List.hpp"
+#include "Plane/Plane.hpp"
+#include "Interface.hpp"
 
 template <class... Args>
 bool PortPrintNMEA(Port & p, const char * format, Args&&... args);
@@ -55,10 +57,11 @@ private:
 	double m_thermal_ceiling;
 	double m_thermal_floor;	
 	TrafficList m_traffic;
+	Plane m_plane;
 
 public:
 
-  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_traffic() {}
+  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_traffic(), m_plane() {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
@@ -101,6 +104,12 @@ WritePXCSP(Port & p, const PolarCoefficients & polar)
 }
 
 inline bool
+WritePXCSR(Port & p, const Plane & plane)
+{
+	return PortPrintNMEA(p, "PXCSR,%s", plane.registration.c_str());
+}
+
+inline bool
 WritePXCSW(Port & p, const GeoPoint & wp)
 {
 	return PortPrintNMEA(p, "PXCSW,%f,%f", wp.latitude.Degrees(), wp.longitude.Degrees());
@@ -136,12 +145,20 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   if(!basic.location_available || !basic.gps_altitude_available)
 	  return;
 
-  /* Update Polar */
+  /* Update Registration and Polar */
   const auto polar = calculated.glide_polar_safety.GetCoefficients();
   if(polar.a != m_polar.a || polar.b != m_polar.b || polar.c != m_polar.c) {
 	  m_polar = polar;
 	  WritePXCSP(port, m_polar);
   }
+
+  /* Update registration */
+  const auto plane = CommonInterface::GetComputerSettings().plane;
+  if(m_plane.registration != plane.registration) {
+	  m_plane = plane;
+	  WritePXCSR(port, m_plane);
+  }
+
 
   /* Update Next Waypoint */
   const auto wp = protected_task_manager->GetActiveWaypoint();
