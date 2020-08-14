@@ -55,10 +55,12 @@ private:
 	double m_thermal_floor;	
 	TrafficList m_traffic;
 	Plane m_plane;
+	Angle m_last_track;
+	double m_last_time;
 
 public:
 
-  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_traffic(), m_plane() {}
+  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_traffic(), m_plane(), m_last_track(), m_last_time(0) {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
@@ -70,15 +72,6 @@ bool
 ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
 {
   return false;
-}
-
-inline bool
-WritePXCSG(Port & p, const AGeoPoint & geo)
-{
-	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "PXCSG,%f,%f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude);
-	return PortWriteNMEA(p, buffer, env);
 }
 
 inline bool
@@ -147,6 +140,16 @@ WritePOGNB(Port & p, const FlarmTraffic & plane)
 	return PortWriteNMEA(p, buffer, env);
 }
 
+inline bool
+WritePXCSG(Port & p, const AGeoPoint & geo, double ground_speed, const Angle & track, double turn_rate, double noncomp_vario)
+{
+	NullOperationEnvironment env;
+	char buffer[74];
+	sprintf(buffer, "PXCSG,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude, ground_speed, track.Degrees(), turn_rate, noncomp_vario);
+	return PortWriteNMEA(p, buffer, env);
+}
+
+
 void
 ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated)
 {
@@ -186,7 +189,15 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   const AGeoPoint pos(basic.location, basic.gps_altitude );
   if(pos.latitude != m_last_position.latitude || pos.longitude != m_last_position.longitude || pos.altitude != m_last_position.altitude) {
 	m_last_position = pos;
-	WritePXCSG(port, pos);
+	const auto dtime = basic.time - m_last_time;
+	const auto dtrack = basic.track - m_last_track;
+	auto turn_rate = 0.0;
+	if(basic.track_available) {
+		turn_rate = dtrack.Degrees()/dtime;
+		m_last_track = basic.track;
+		m_last_time = basic.time;
+	}
+	WritePXCSG(port, pos, basic.ground_speed, basic.track, turn_rate, basic.gps_vario);
   }
 
   /* Update thermal band, also during thermalling */
