@@ -1,0 +1,37 @@
+variables:
+  DOCKER_DRIVER: overlay2
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - docker
+  - build
+
+docker:build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  only:
+#    refs:
+#      - master
+    changes:
+      - Dockerfile.build
+      - tools/install-android-tools.sh
+      - tools/install-debian-packages.sh
+  before_script:
+    - docker info
+  script:
+    - sh tools/build_and_push_from_docker_file.sh build
+  except:
+    - schedules
+
+build:android:
+  stage: build
+  image:
+    name: "registry.gitlab.com/roeles/xcsoar/build"
+  script:
+    - make TARGET=ANDROID7
+  artifacts:
+    paths:
+      - output/ANDROID7/bin/XCSoar-debug.apk
+    expire_in: 1 week

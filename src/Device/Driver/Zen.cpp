@@ -53,14 +53,14 @@ private:
 	AGeoPoint m_last_position;
 	double m_thermal_ceiling;
 	double m_thermal_floor;	
-	TrafficList m_traffic;
+//	TrafficList m_traffic;
 	Plane m_plane;
 	Angle m_last_track;
 	double m_last_time;
 
 public:
 
-  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_traffic(), m_plane(), m_last_track(), m_last_time(0) {}
+  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_plane(), m_last_track(), m_last_time(0) {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
