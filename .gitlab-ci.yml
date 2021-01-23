@@ -30,7 +30,7 @@ build:android:
   image:
     name: "registry.gitlab.com/roeles/xcsoar/build"
   script:
-    - make TARGET=ANDROID7
+    - make TARGET=ANDROID7 DEBUG=n
   artifacts:
     paths:
       - output/ANDROID7/bin/XCSoar-debug.apk
