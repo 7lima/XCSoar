@@ -25,6 +25,13 @@ docker:build:
   except:
     - schedules
 
+build:unix:
+  stage: build
+  image:
+    name: "registry.gitlab.com/roeles/xcsoar/build"
+  script:
+    - make WERROR=n
+
 build:android:
   stage: build
   image:
@@ -35,3 +42,4 @@ build:android:
     paths:
       - output/ANDROID7/bin/XCSoar-debug.apk
     expire_in: 1 week
+
