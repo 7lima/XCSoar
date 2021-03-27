@@ -46,4 +46,4 @@ build:openvario:
   trigger: roeles/openvario_docker
   only:
     refs:
-      - master
+      - zen-krt2-pathfinder
