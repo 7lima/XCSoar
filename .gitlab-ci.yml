@@ -12,8 +12,6 @@ docker:build:
   services:
     - docker:dind
   only:
-#    refs:
-#      - master
     changes:
       - Dockerfile.build
       - tools/install-android-tools.sh
@@ -43,3 +41,9 @@ build:android:
       - output/ANDROID7/bin/XCSoar-debug.apk
     expire_in: 1 week
 
+build:openvario:
+  stage: build
+  trigger: roeles/openvario_docker
+  only:
+    refs:
+      - master
