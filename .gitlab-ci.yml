@@ -5,6 +5,7 @@ variables:
 stages:
   - docker
   - build
+  - screenshot
 
 docker:build:
   stage: docker
@@ -23,12 +24,30 @@ docker:build:
   except:
     - schedules
 
+docker:screenshot:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  only:
+    changes:
+      - Dockerfile.screenshot
+  before_script:
+    - docker info
+  script:
+    - sh tools/build_and_push_from_docker_file.sh screenshot
+  except:
+    - schedules
+
 build:unix:
   stage: build
   image:
     name: "registry.gitlab.com/roeles/xcsoar/build"
   script:
     - make WERROR=n
+  artifacts:
+    paths:
+      - output/UNIX/bin/xcsoar
 
 build:android:
   stage: build
@@ -47,3 +66,15 @@ build:openvario:
   only:
     refs:
       - zen-krt2-pathfinder
+
+pathfinder:
+  stage: screenshot
+  needs: ["build:unix"]
+  image:
+    name: "registry.gitlab.com/roeles/xcsoar/screenshot"
+  script:
+    - Xvfb :99 &
+    - ldd ./output/UNIX/bin/xcsoar
+    - ./output/UNIX/bin/xcsoar -fly &
+    - sleep 1m
+    - DISPLAY=:99 import -window root screenshot.png
