@@ -44,7 +44,7 @@ build:unix:
   image:
     name: "registry.gitlab.com/roeles/xcsoar/build"
   script:
-    - make WERROR=n
+    - make WERROR=n OPENGL=n ENABLE_SDL=y FREETYPE=y
   artifacts:
     paths:
       - output/UNIX/bin/xcsoar
@@ -73,8 +73,12 @@ pathfinder:
   image:
     name: "registry.gitlab.com/roeles/xcsoar/screenshot"
   script:
-    - Xvfb :99 &
-    - ldd ./output/UNIX/bin/xcsoar
-    - ./output/UNIX/bin/xcsoar -fly &
+    - export DISPLAY=:0
+    - Xvfb $DISPLAY &
+    - ./output/UNIX/bin/xcsoar -fly -1280x1024 &
     - sleep 1m
-    - DISPLAY=:99 import -window root screenshot.png
+    - import -window root screenshot.png
+  artifacts:
+    paths:
+      - screenshot.png
+    expire_in: 1 day
