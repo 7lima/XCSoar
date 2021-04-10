@@ -57,11 +57,11 @@ Copyright_License {
 TopographyFileRenderer::TopographyFileRenderer(const TopographyFile &_file,
                                                const TopographyLook &_look)
   :file(_file), look(_look),
-   pen(Layout::ScaleFinePenWidth(file.GetPenWidth()), DarkColor(file.GetColor())),
+   pen(Layout::ScaleFinePenWidth(file.GetPenWidth()), LightColor(file.GetColor())),
 #ifdef ENABLE_OPENGL
    array_buffer(nullptr)
 #else
-   brush(DarkColor(file.GetColor()))
+   brush(LightColor(file.GetColor()))
 #endif
 {
   ResourceId icon_ID = file.GetIcon();
