@@ -43,6 +43,8 @@ Copyright_License {
 #include "FLARM/List.hpp"
 #include "Plane/Plane.hpp"
 #include "Interface.hpp"
+  
+constexpr static std::size_t max_sentence_length = 256;
 
 class ZenDevice : public AbstractDevice {
 private:
@@ -60,7 +62,7 @@ private:
 
 public:
 
-  ZenDevice(Port &_port):port(_port), m_polar(), m_next_waypoint(), m_wind_vector(), m_last_position(), m_thermal_ceiling(), m_thermal_floor(), m_plane(), m_last_track(), m_last_time(0) {}
+  ZenDevice(Port &_port):port(_port), m_polar(0, 0, 0), m_next_waypoint(Angle::Zero(), Angle::Zero()), m_wind_vector(Angle::Zero(), 0), m_last_position(GeoPoint(Angle::Zero(), Angle::Zero()), 0), m_thermal_ceiling(0), m_thermal_floor(0), m_plane(), m_last_track(Angle::Zero()), m_last_time(0) {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
@@ -78,8 +80,8 @@ inline bool
 WriteGPMWV(Port & p, const SpeedVector & wind)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "GPMWV,%.1f,T,%.1f,A", wind.bearing.Degrees(), wind.norm);
+	char buffer[max_sentence_length];
+	if(snprintf(buffer, max_sentence_length, "GPMWV,%.1f,T,%.1f,A", wind.bearing.Degrees(), wind.norm) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -87,8 +89,8 @@ inline bool
 WritePXCSP(Port & p, const PolarCoefficients & polar)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "PXCSP,%f,%f,%f", polar.a, polar.b, polar.c);
+	char buffer[max_sentence_length];
+	if(snprintf(buffer, max_sentence_length, "PXCSP,%f,%f,%f", polar.a, polar.b, polar.c) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -96,8 +98,8 @@ inline bool
 WritePXCSR(Port & p, const Plane & plane)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "PXCSR,%s", plane.registration.c_str());
+	char buffer[max_sentence_length];
+	if(snprintf(buffer, max_sentence_length, "PXCSR,%s", plane.registration.c_str()) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -105,8 +107,8 @@ inline bool
 WritePXCSW(Port & p, const GeoPoint & wp)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "PXCSW,%f,%f", wp.latitude.Degrees(), wp.longitude.Degrees());
+	char buffer[max_sentence_length];
+	if(snprintf(buffer, max_sentence_length, "PXCSW,%f,%f", wp.latitude.Degrees(), wp.longitude.Degrees()) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -114,8 +116,8 @@ inline bool
 WritePXCST(Port & p, double floor, double ceiling)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "PXCST,%.0f,%.0f", floor, ceiling);
+	char buffer[max_sentence_length];
+	if(snprintf(buffer, max_sentence_length, "PXCST,%.0f,%.0f", floor, ceiling) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -123,10 +125,10 @@ inline bool
 WritePOGNB(Port & p, const FlarmTraffic & plane)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
+	char buffer[max_sentence_length];
 	char flarm_id[8];
 	plane.id.Format(flarm_id);
-	sprintf(buffer, "POGNB,%u,%u,%s,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f",
+	if(snprintf(buffer, max_sentence_length, "POGNB,%u,%u,%s,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f",
 			(unsigned)plane.type,
 			(unsigned)plane.id_type,
 			flarm_id,
@@ -136,7 +138,7 @@ WritePOGNB(Port & p, const FlarmTraffic & plane)
 			(double)plane.speed,
 			((Angle)plane.track).Degrees(),
 			(double)plane.turn_rate,
-			(double)plane.climb_rate);
+			(double)plane.climb_rate) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -144,8 +146,8 @@ inline bool
 WritePXCSG(Port & p, const AGeoPoint & geo, double ground_speed, const Angle & track, double turn_rate, double noncomp_vario)
 {
 	NullOperationEnvironment env;
-	char buffer[74];
-	sprintf(buffer, "PXCSG,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude, ground_speed, track.Degrees(), turn_rate, noncomp_vario);
+	char buffer[max_sentence_length];
+	if(snprintf(buffer, max_sentence_length, "PXCSG,%f,%f,%.1f,%.1f,%.1f,%.1f,%.1f", geo.latitude.Degrees(), geo.longitude.Degrees(), geo.altitude, ground_speed, track.Degrees(), turn_rate, noncomp_vario) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
 
@@ -158,7 +160,7 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 
   /* Update Registration and Polar */
   const auto polar = calculated.glide_polar_safety.GetCoefficients();
-  if(polar.a != m_polar.a || polar.b != m_polar.b || polar.c != m_polar.c) {
+  if(polar.IsValid() && (polar.a != m_polar.a || polar.b != m_polar.b || polar.c != m_polar.c)) {
 	  m_polar = polar;
 	  WritePXCSP(port, m_polar);
   }
@@ -172,10 +174,12 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 
 
   /* Update Next Waypoint */
-  const auto wp = protected_task_manager->GetActiveWaypoint();
-  if(wp != nullptr && m_next_waypoint != wp->location) {
-	  m_next_waypoint = wp->location;
-	  WritePXCSW(port, m_next_waypoint);
+  if(protected_task_manager != nullptr) {
+    const auto wp = protected_task_manager->GetActiveWaypoint();
+    if(wp != nullptr && m_next_waypoint != wp->location) {
+	    m_next_waypoint = wp->location;
+	    WritePXCSW(port, m_next_waypoint);
+    }
   }
 
   /* Update Wind Vector */
@@ -192,7 +196,7 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 	const auto dtime = basic.time - m_last_time;
 	const auto dtrack = basic.track - m_last_track;
 	auto turn_rate = 0.0;
-	if(basic.track_available) {
+	if(basic.track_available && dtime > 0) {
 		turn_rate = dtrack.Degrees()/dtime;
 		m_last_track = basic.track;
 		m_last_time = basic.time;
