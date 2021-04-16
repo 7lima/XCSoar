@@ -63,4 +63,39 @@ public:
   }
 };
 
+/**
+ * Parameter type for boost::asio::basic_stream_socket::set_option()
+ * which sets SO_KEEPALIVE.
+ */
+class KeepAlive {
+#ifdef WIN32
+  DWORD value;
+#else
+  int value;
+#endif
+
+public:
+  explicit constexpr KeepAlive():value(1) {}
+
+  template<class Protocol>
+  int level(const Protocol &p) const {
+    return SOL_SOCKET;
+  }
+
+  template<class Protocol>
+  int name(const Protocol &p) const {
+    return SO_KEEPALIVE;
+  }
+
+  template<class Protocol>
+  const void *data(const Protocol &p) const {
+    return &value;
+  }
+
+  template<class Protocol>
+  size_t size(const Protocol& p) const {
+    return sizeof(value);
+  }
+};
+
 #endif

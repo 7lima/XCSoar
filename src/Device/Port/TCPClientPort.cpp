@@ -114,6 +114,9 @@ TCPClientPort::OnConnect(const boost::system::error_code &ec)
   SendTimeoutS send_timeout(1);
   socket.set_option(send_timeout);
 
+  KeepAlive keep_alive;
+  socket.set_option(keep_alive);
+
   state = PortState::READY;
   StateChanged();
 
