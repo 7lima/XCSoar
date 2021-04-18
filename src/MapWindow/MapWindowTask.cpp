@@ -102,7 +102,7 @@ MapWindow::DrawExternalRoute(Canvas &canvas)
   const auto &route = Basic().route;
 
   const auto r_size = route.size();
-  if(r_size < 1) return;  
+  if(r_size < 2) return;
 
   BulkPixelPoint p[r_size], *pp = &p[0];
   for (auto i = route.begin(), end = route.end(); i != end; ++i, ++pp)
