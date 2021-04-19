@@ -108,8 +108,6 @@ MapWindow::DrawExternalRoute(Canvas &canvas)
   for (auto i = route.begin(), end = route.end(); i != end; ++i, ++pp)
     *pp = render_projection.GeoToScreen(*i);
 
-  p[r_size - 1] = ScreenClosestPoint(p[r_size-1], p[r_size-2], p[r_size-1], Layout::Scale(20));
-
   canvas.Select(look.task.bearing_pen);
   canvas.DrawPolyline(p, r_size);
 }
