@@ -121,6 +121,7 @@ WritePXCST(Port & p, double floor, double ceiling)
 	return PortWriteNMEA(p, buffer, env);
 }
 
+#if 0
 inline bool
 WritePOGNB(Port & p, const FlarmTraffic & plane)
 {
@@ -141,6 +142,7 @@ WritePOGNB(Port & p, const FlarmTraffic & plane)
 			(double)plane.climb_rate) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
+#endif
 
 inline bool
 WritePXCSG(Port & p, const AGeoPoint & geo, double ground_speed, const Angle & track, double turn_rate, double noncomp_vario)
@@ -215,12 +217,14 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 	  WritePXCST(port, m_thermal_floor, m_thermal_ceiling);
   }
 
+#if 0
   /* Update FLARM traffic, if it was updated less than a second ago */
   for(const auto & plane : basic.flarm.traffic.list) {
 	  if(!plane.stealth) {
 		  WritePOGNB(port, plane);
 	  }
   } 
+#endif
 }
 
 static Device *
