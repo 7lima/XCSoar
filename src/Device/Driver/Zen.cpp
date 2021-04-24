@@ -32,6 +32,7 @@ Copyright_License {
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
 #include "NMEA/InputLine.hpp"
+#include "NMEA/Validity.hpp"
 #include "Units/System.hpp"
 #include "Engine/GlideSolvers/PolarCoefficients.hpp"
 #include "Operation/Operation.hpp"
@@ -55,10 +56,12 @@ private:
 	AGeoPoint m_last_position;
 	double m_thermal_ceiling;
 	double m_thermal_floor;	
-//	TrafficList m_traffic;
 	Plane m_plane;
 	Angle m_last_track;
 	double m_last_time;
+  Validity m_last_update;
+
+  bool PZENR(NMEAInputLine & line, NMEAInfo & info);
 
 public:
 
@@ -70,9 +73,71 @@ public:
   void OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculated) override;
 };
 
+inline bool
+ZenDevice::PZENR(NMEAInputLine & line, NMEAInfo & info)
+{
+  /*
+   * $PZENR,entry,total_entries,dtime,lat,lon,alt,stdev,maccready,*hh
+   * Field number:
+   * 1) Index of the current entry in the route
+   * 2) Time cost from current position in seconds
+   * 3) Approximate latitude of position in degrees
+   * 4) Approximate longitude of position in degrees
+   * 5) Mean altitude at position in meters MSL
+   * 6) Uncertainty of position
+   * 7) Optimal maccready setting at position
+   */
+   unsigned int route_index = 0;
+   if(!line.ReadChecked(route_index))
+     return false;
+
+   double cost = 0;
+   if(!line.ReadChecked(cost))
+     return false;
+
+   double lat = 0;
+   if(!line.ReadChecked(lat))
+     return false;
+
+   double lon = 0;
+   if(!line.ReadChecked(lon))
+     return false;
+
+   double alt = 0;
+   if(!line.ReadChecked(alt))
+     return false;
+
+   double stdev = 0;
+   if(!line.ReadChecked(stdev))
+     return false;
+
+   double mc = 0;
+   if(!line.ReadChecked(mc))
+     return false;
+
+   if(route_index >= info.route.max_size())
+     return false;
+
+   {
+     info.route.resize(route_index+1);
+     const GeoPoint gps(Angle::Degrees(lon), Angle::Degrees(lat));
+     info.route[route_index] = AGeoPoint(gps, alt);
+   }
+   return true;
+}
+
 bool
 ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
 {
+  NMEAInputLine line(_line);
+  m_last_update.Update(info.clock);
+
+  char type[16];
+  line.Read(type, 16);
+
+  if (StringIsEqual(type + 1, "PZENR"))
+    return PZENR(line, info);
+
   return false;
 }
 
@@ -121,7 +186,6 @@ WritePXCST(Port & p, double floor, double ceiling)
 	return PortWriteNMEA(p, buffer, env);
 }
 
-#if 0
 inline bool
 WritePOGNB(Port & p, const FlarmTraffic & plane)
 {
@@ -142,7 +206,6 @@ WritePOGNB(Port & p, const FlarmTraffic & plane)
 			(double)plane.climb_rate) == max_sentence_length) return false;
 	return PortWriteNMEA(p, buffer, env);
 }
-#endif
 
 inline bool
 WritePXCSG(Port & p, const AGeoPoint & geo, double ground_speed, const Angle & track, double turn_rate, double noncomp_vario)
@@ -159,6 +222,9 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 {
   if(!basic.location_available || !basic.gps_altitude_available)
 	  return;
+
+  if(m_last_update.IsValid() &&m_last_update.IsOlderThan(basic.clock, 5))
+    return;
 
   /* Update Registration and Polar */
   const auto polar = calculated.glide_polar_safety.GetCoefficients();
@@ -217,14 +283,12 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
 	  WritePXCST(port, m_thermal_floor, m_thermal_ceiling);
   }
 
-#if 0
   /* Update FLARM traffic, if it was updated less than a second ago */
   for(const auto & plane : basic.flarm.traffic.list) {
 	  if(!plane.stealth) {
 		  WritePOGNB(port, plane);
 	  }
   } 
-#endif
 }
 
 static Device *

@@ -118,9 +118,6 @@ NMEAParser::ParseLine(const char *string, NMEAInfo &info)
     if (StringIsEqual(type + 1, "PZENT"))
       return PZENT(line, info);
     
-    if (StringIsEqual(type + 1, "PZENR"))
-      return PZENR(line, info);
-
     return false;
   }
 
@@ -858,55 +855,3 @@ NMEAParser::PZENT(NMEAInputLine &line, NMEAInfo &info)
    return true;
 }
 
-inline bool
-NMEAParser::PZENR(NMEAInputLine & line, NMEAInfo & info)
-{
-  /*
-   * $PZENR,entry,total_entries,dtime,lat,lon,alt,stdev,maccready,*hh
-   * Field number:
-   * 1) Index of the current entry in the route
-   * 2) Time cost from current position in seconds
-   * 3) Approximate latitude of position in degrees
-   * 4) Approximate longitude of position in degrees
-   * 5) Mean altitude at position in meters MSL
-   * 6) Uncertainty of position
-   * 7) Optimal maccready setting at position
-   */
-   unsigned int route_index = 0;
-   if(!line.ReadChecked(route_index))
-     return false;
-   
-   double cost = 0;
-   if(!line.ReadChecked(cost))
-     return false;
-
-   double lat = 0;
-   if(!line.ReadChecked(lat))
-     return false;
-   
-   double lon = 0;
-   if(!line.ReadChecked(lon))
-     return false;
-
-   double alt = 0;
-   if(!line.ReadChecked(alt))
-     return false;
-
-   double stdev = 0;
-   if(!line.ReadChecked(stdev))
-     return false;
-   
-   double mc = 0;
-   if(!line.ReadChecked(mc))
-     return false;
-
-   if(route_index >= info.route.max_size())
-     return false;
-
-   {
-     info.route.resize(route_index+1);
-     const GeoPoint gps(Angle::Degrees(lon), Angle::Degrees(lat));
-     info.route[route_index] = AGeoPoint(gps, alt);
-   }
-   return true;
-}  
