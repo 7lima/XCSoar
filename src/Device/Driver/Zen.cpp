@@ -32,7 +32,6 @@ Copyright_License {
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
 #include "NMEA/InputLine.hpp"
-#include "NMEA/Validity.hpp"
 #include "Units/System.hpp"
 #include "Engine/GlideSolvers/PolarCoefficients.hpp"
 #include "Operation/Operation.hpp"
@@ -59,13 +58,13 @@ private:
 	Plane m_plane;
 	Angle m_last_track;
 	double m_last_time;
-  Validity m_last_update;
+  bool m_can_send;
 
   bool PZENR(NMEAInputLine & line, NMEAInfo & info);
 
 public:
 
-  ZenDevice(Port &_port):port(_port), m_polar(0, 0, 0), m_next_waypoint(Angle::Zero(), Angle::Zero()), m_wind_vector(Angle::Zero(), 0), m_last_position(GeoPoint(Angle::Zero(), Angle::Zero()), 0), m_thermal_ceiling(0), m_thermal_floor(0), m_plane(), m_last_track(Angle::Zero()), m_last_time(0) {}
+  ZenDevice(Port &_port):port(_port), m_polar(0, 0, 0), m_next_waypoint(Angle::Zero(), Angle::Zero()), m_wind_vector(Angle::Zero(), 0), m_last_position(GeoPoint(Angle::Zero(), Angle::Zero()), 0), m_thermal_ceiling(0), m_thermal_floor(0), m_plane(), m_last_track(Angle::Zero()), m_last_time(0), m_can_send(true) {}
   
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
@@ -130,7 +129,7 @@ bool
 ZenDevice::ParseNMEA(const char *_line, NMEAInfo &info)
 {
   NMEAInputLine line(_line);
-  m_last_update.Update(info.clock);
+  m_can_send = true;
 
   char type[16];
   line.Read(type, 16);
@@ -223,8 +222,10 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   if(!basic.location_available || !basic.gps_altitude_available)
 	  return;
 
-  if(m_last_update.IsValid() &&m_last_update.IsOlderThan(basic.clock, 1))
+  if(m_can_send == false)
     return;
+
+  m_can_send = false;
 
   /* Update Registration and Polar */
   const auto polar = calculated.glide_polar_safety.GetCoefficients();
