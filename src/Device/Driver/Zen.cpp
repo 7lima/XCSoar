@@ -223,7 +223,7 @@ ZenDevice::OnCalculatedUpdate(const MoreData &basic, const DerivedInfo &calculat
   if(!basic.location_available || !basic.gps_altitude_available)
 	  return;
 
-  if(m_last_update.IsValid() &&m_last_update.IsOlderThan(basic.clock, 5))
+  if(m_last_update.IsValid() &&m_last_update.IsOlderThan(basic.clock, 1))
     return;
 
   /* Update Registration and Polar */
