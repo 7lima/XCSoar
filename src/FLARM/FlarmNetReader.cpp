@@ -21,6 +21,8 @@ Copyright_License {
 }
 */
 
+#include <stdexcept>
+
 #include "FlarmNetReader.hpp"
 #include "FlarmNetRecord.hpp"
 #include "FlarmNetDatabase.hpp"

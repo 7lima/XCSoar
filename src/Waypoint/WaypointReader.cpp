@@ -33,6 +33,7 @@ Copyright_License {
 #include "IO/FileLineReader.hpp"
 
 #include <memory>
+#include <stdexcept>
 
 static WaypointReaderBase *
 CreateWaypointReader(WaypointFileType type, WaypointFactory factory)

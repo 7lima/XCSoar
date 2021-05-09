@@ -21,6 +21,8 @@ Copyright_License {
 }
 */
 
+#include <stdexcept>
+
 #include "PlaneFileGlue.hpp"
 #include "Plane.hpp"
 #include "Polar/Parser.hpp"

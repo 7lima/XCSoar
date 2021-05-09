@@ -21,6 +21,8 @@
 }
 */
 
+#include <stdexcept>
+
 #include "Logger/LoggerImpl.hpp"
 #include "Logger/Settings.hpp"
 #include "LogFile.hpp"

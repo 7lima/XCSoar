@@ -23,6 +23,8 @@
 #ifndef XCSOAR_TASK_ACCESSOR_HPP
 #define XCSOAR_TASK_ACCESSOR_HPP
 
+#include <stdexcept>
+
 #include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"

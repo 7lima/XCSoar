@@ -34,6 +34,7 @@ Copyright_License {
 #include "LogFile.hpp"
 
 #include <set>
+#include <stdexcept>
 
 #include <assert.h>
 #include <tchar.h>

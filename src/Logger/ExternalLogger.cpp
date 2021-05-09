@@ -21,6 +21,8 @@
 }
 */
 
+#include <stdexcept>
+
 #include "Logger/ExternalLogger.hpp"
 #include "Form/DataField/ComboList.hpp"
 #include "Dialogs/Message.hpp"
