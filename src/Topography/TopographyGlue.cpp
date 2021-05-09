@@ -21,6 +21,8 @@ Copyright_License {
 }
 */
 
+#include <stdexcept>
+
 #include "Topography/TopographyGlue.hpp"
 #include "Topography/TopographyStore.hpp"
 #include "Language/Language.hpp"

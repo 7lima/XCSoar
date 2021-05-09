@@ -21,6 +21,8 @@ Copyright_License {
 }
 */
 
+#include <stdexcept>
+
 #include "FlightLogger.hpp"
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"

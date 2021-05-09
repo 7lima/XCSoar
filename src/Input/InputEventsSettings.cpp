@@ -21,6 +21,8 @@ Copyright_License {
 }
 */
 
+#include <stdexcept>
+
 #include "InputEvents.hpp"
 #include "Dialogs/Error.hpp"
 #include "Language/Language.hpp"

@@ -32,6 +32,8 @@ Copyright_License {
 #include "IO/LineReader.hpp"
 #include "Language/Language.hpp"
 
+#include <stdexcept>
+
 #define XCSCHKLIST  "xcsoar-checklist.txt"
 
 #define MAXTITLE 200

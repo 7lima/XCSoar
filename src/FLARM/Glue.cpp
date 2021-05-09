@@ -21,6 +21,8 @@ Copyright_License {
 }
 */
 
+#include <stdexcept>
+
 #include "Glue.hpp"
 #include "Global.hpp"
 #include "TrafficDatabases.hpp"
