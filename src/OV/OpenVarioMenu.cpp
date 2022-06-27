@@ -98,7 +98,7 @@ FileMenuWidget::Prepare(ContainerWindow &parent,
     Run("/usr/bin/download-igc.sh");
   });
 
-  AddButton("Backup OpenVario to USB", [](){
+  AddButton("Backup OpenVario and XCSoar settings from OpenVario to USB", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/backup-system.sh", nullptr
     };
@@ -108,9 +108,20 @@ FileMenuWidget::Prepare(ContainerWindow &parent,
                      "Downloading files", argv);
   });
 
-  AddButton("Restore from USB to OpenVario", [](){
+  AddButton("Restore OpenVario and XCSoar settings from USB to OpenVario", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/restore-system.sh", nullptr
+    };
+
+    RunProcessDialog(UIGlobals::GetMainWindow(),
+                     UIGlobals::GetDialogLook(),
+                     "Uploading files", argv);
+  });
+}
+
+AddButton("Restore OpenVario and XCSoar settings from USB to OpenVario", [](){
+    static constexpr const char *argv[] = {
+      "/usr/bin/restore-xcsoar.sh", nullptr
     };
 
     RunProcessDialog(UIGlobals::GetMainWindow(),
