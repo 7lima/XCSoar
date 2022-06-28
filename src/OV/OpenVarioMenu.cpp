@@ -117,9 +117,8 @@ FileMenuWidget::Prepare(ContainerWindow &parent,
                      UIGlobals::GetDialogLook(),
                      "Uploading files", argv);
   });
-}
 
-AddButton("Restore OpenVario and XCSoar settings from USB", [](){
+AddButton("Restore only XCSoar settings from USB", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/restore-xcsoar.sh", nullptr
     };
