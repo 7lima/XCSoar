@@ -97,6 +97,26 @@ FileMenuWidget::Prepare(ContainerWindow &parent,
     const UI::ScopeSuspendEventQueue suspend_event_queue{event_queue};
     Run("/usr/bin/download-igc.sh");
   });
+  
+AddButton("Update Maps", [](){
+    static constexpr const char *argv[] = {
+      "/usr/bin/update-maps.sh", nullptr
+    };
+
+    RunProcessDialog(UIGlobals::GetMainWindow(),
+                     UIGlobals::GetDialogLook(),
+                     "Update Maps", argv);
+  });
+  
+AddButton("Update or upload files from USB to XCSoar", [](){
+    static constexpr const char *argv[] = {
+      "/usr/bin/upload-xcsoar.sh", nullptr
+    };
+
+    RunProcessDialog(UIGlobals::GetMainWindow(),
+                     UIGlobals::GetDialogLook(),
+                     "Update/Upload files", argv);
+  });
 
   AddButton("Backup OpenVario and XCSoar settings to USB", [](){
     static constexpr const char *argv[] = {
@@ -128,25 +148,6 @@ AddButton("Restore only XCSoar settings from USB", [](){
                      "Uploading files", argv);
   });
   
-AddButton("Update Maps", [](){
-    static constexpr const char *argv[] = {
-      "/usr/bin/update-maps.sh", nullptr
-    };
-
-    RunProcessDialog(UIGlobals::GetMainWindow(),
-                     UIGlobals::GetDialogLook(),
-                     "Update Maps", argv);
-  });
-  
-AddButton("Update files from USB to XCSoar", [](){
-    static constexpr const char *argv[] = {
-      "/usr/bin/upload-xcsoar.sh", nullptr
-    };
-
-    RunProcessDialog(UIGlobals::GetMainWindow(),
-                     UIGlobals::GetDialogLook(),
-                     "Update files", argv);
-  });
 }
 
 class SystemMenuWidget final
