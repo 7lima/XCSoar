@@ -108,7 +108,7 @@ AddButton("Update Maps", [](){
                      "Update Maps", argv);
   });
   
-AddButton("Update or upload files from USB to XCSoar", [](){
+AddButton("Update or upload XCSoar files from USB", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/upload-xcsoar.sh", nullptr
     };
@@ -118,7 +118,7 @@ AddButton("Update or upload files from USB to XCSoar", [](){
                      "Update/Upload files", argv);
   });
 
-  AddButton("Backup OpenVario and XCSoar settings to USB", [](){
+  AddButton("System Backup: OpenVario and XCSoar settings to USB", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/backup-system.sh", nullptr
     };
@@ -128,7 +128,7 @@ AddButton("Update or upload files from USB to XCSoar", [](){
                      "Downloading files", argv);
   });
 
-  AddButton("Restore OpenVario and XCSoar settings from USB", [](){
+  AddButton("System Restore: OpenVario and XCSoar settings from USB", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/restore-system.sh", nullptr
     };
@@ -138,7 +138,7 @@ AddButton("Update or upload files from USB to XCSoar", [](){
                      "Uploading files", argv);
   });
 
-AddButton("Restore only XCSoar settings from USB", [](){
+AddButton("XCSoar Restore: Only XCSoar settings from USB", [](){
     static constexpr const char *argv[] = {
       "/usr/bin/restore-xcsoar.sh", nullptr
     };
