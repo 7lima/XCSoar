@@ -127,6 +127,26 @@ AddButton("Restore only XCSoar settings from USB", [](){
                      UIGlobals::GetDialogLook(),
                      "Uploading files", argv);
   });
+  
+AddButton("Update Maps", [](){
+    static constexpr const char *argv[] = {
+      "/usr/bin/update-maps.sh", nullptr
+    };
+
+    RunProcessDialog(UIGlobals::GetMainWindow(),
+                     UIGlobals::GetDialogLook(),
+                     "Update Maps", argv);
+  });
+  
+AddButton("Update files from USB to XCSoar", [](){
+    static constexpr const char *argv[] = {
+      "/usr/bin/upload-xcsoar.sh", nullptr
+    };
+
+    RunProcessDialog(UIGlobals::GetMainWindow(),
+                     UIGlobals::GetDialogLook(),
+                     "Update files", argv);
+  });
 }
 
 class SystemMenuWidget final
@@ -235,16 +255,6 @@ SystemMenuWidget::Prepare(ContainerWindow &parent,
     RunProcessDialog(UIGlobals::GetMainWindow(),
                      UIGlobals::GetDialogLook(),
                      "Update System", argv);
-  });
-
-  AddButton("Update Maps", [](){
-    static constexpr const char *argv[] = {
-      "/usr/bin/update-maps.sh", nullptr
-    };
-
-    RunProcessDialog(UIGlobals::GetMainWindow(),
-                     UIGlobals::GetDialogLook(),
-                     "Update Maps", argv);
   });
 
   AddButton("Calibrate Sensors", CalibrateSensors);
